@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accuracy Groot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    :root { --meli-yellow: #FFE600; --meli-blue: #2D3277; --bg-light: #f5f5f5; --meli-link: #3483fa; }
+    body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; }
+
+    .sticky-header { position: sticky; top: 0; z-index: 1000; background-color: var(--bg-light); padding-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header-panel { background-color: var(--meli-yellow); padding: 0 25px; display: flex; justify-content: space-between; align-items: center; height: 70px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .header-title { color: var(--meli-blue); font-size: 1.8rem; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: 1px; }
+
+    .user-card { display: flex; align-items: center; background: white; padding: 5px 15px 5px 5px; border-radius: 30px; gap: 10px; border: 1px solid rgba(0,0,0,0.1); }
+    .user-avatar { width: 34px; height: 34px; background-color: var(--meli-blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+    .user-details { display: flex; flex-direction: column; line-height: 1.1; }
+    .user-name { font-size: 0.85rem; font-weight: bold; color: #333; text-transform: uppercase; }
+    .user-role { font-size: 0.65rem; color: #666; font-weight: bold; }
+
+    .filter-box { background: white; padding: 15px; border-radius: 12px; margin: 10px 0; border-left: 5px solid var(--meli-blue); }
+    .filter-row-custom { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 8px; width: 100%; }
+    .filter-col-custom { flex: 1 1 0; min-width: 0; }
+    .filter-label { font-size: 9px; font-weight: bold; margin-bottom: 4px; display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+
+    .dropdown-check { width: 100%; text-align: left; font-size: 9px; background: white; border: 1px solid #ced4da; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px; }
+    .dropdown-menu { font-size: 11px; max-height: 380px; width: 250px; padding: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: none; }
+    .filter-options-container { overflow-y: auto; max-height: 220px; margin-top: 8px; padding-left: 5px; }
+    .search-filter { font-size: 11px; padding: 6px; border-radius: 6px; border: 1px solid #ddd; width: 100%; margin-bottom: 5px; }
+
+    .form-check { padding-left: 2.5em; margin-bottom: 4px; border-radius: 4px; transition: 0.2s; min-height: 1.5rem; }
+    .form-check-input { margin-left: -2em; cursor: pointer; border-color: #ccc; }
+    .form-check:hover { background-color: #f1f1f1; }
+    .form-check-label { cursor: pointer; width: 100%; font-size: 10.5px; color: #444; white-space: normal; line-height: 1.2; }
+
+    .card-kpi { background: white; border-radius: 12px; padding: 15px; text-align: center; border-top: 5px solid var(--meli-blue); transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card-kpi:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .kpi-title { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; }
+    .kpi-val { font-size: 1.6rem; font-weight: bold; color: var(--meli-blue); }
+    .kpi-pct { font-size: 0.85rem; font-weight: bold; color: #888; }
+
+    .action-column { display: flex; flex-direction: column; gap: 8px; justify-content: center; height: 100%; padding-left: 10px; }
+    .btn-refresh { background-color: white; color: var(--meli-link); border: 1px solid var(--meli-link); font-weight: bold; font-size: 9px; padding: 8px; border-radius: 6px; }
+    .btn-reset { background: none; border: none; color: #ff4747; font-weight: bold; font-size: 10px; cursor: pointer; }
+    .content-body { padding: 0 25px 50px 25px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; border-bottom: 2px solid var(--meli-blue); padding-bottom: 5px; }
+    .btn-meli { background-color: var(--meli-blue); color: white; border: none; font-weight: bold; font-size: 10px; padding: 5px 12px; }
+    .table-res { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    th { font-size: 9.5px; background: #333 !important; color: white; text-transform: uppercase; }
+    td { font-size: 9.5px; }
+
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+    .pagination-controls { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 15px; }
+    .badge-validar { background-color: #FFEBEB; color: #E60000; padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 9px; border: 1px solid #FFC1C1; }
+    .badge-correcto { background-color: #E8F5E9; color: #2E7D32; padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 9px; border: 1px solid #A5D6A7; }
+
+    .btn-help-trigger { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background-color: var(--meli-blue); color: white; border-radius: 50%; font-size: 11px; margin-left: 8px; vertical-align: middle; text-decoration: none; font-weight: bold; }
+    .popover { border: 1px solid var(--meli-blue); box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; }
+    .popover-header { background-color: var(--meli-blue); color: white; font-size: 12px; font-weight: bold; border-radius: 7px 7px 0 0; }
+    .popover-body { font-size: 11px; color: #444; padding: 12px; }
+    .popover-body ul { padding-left: 1.2rem !important; margin-bottom: 0; }
+    .popover-body li { margin-bottom: 5px; }
+
+    .error-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-size: 12px; color: #856404; display: none; }
+  </style>
+</head>
+<body>
+  <div id="loader" class="loading-overlay">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 font-weight-bold">Sincronizando Dashboard Meli...</p>
+  </div>
+
+  <div class="sticky-header">
+    <div class="header-panel">
+      <div class="header-left">
+        <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.21.22/mercadolibre/logo__large_plus.png" height="35">
+      </div>
+      <div class="header-center"><h1 class="header-title">Accuracy Groot</h1></div>
+      <div class="header-right">
+        <div class="user-card">
+          <div class="user-avatar" id="user-initials">U</div>
+          <div class="user-details">
+            <span class="user-name" id="user-name">CARGANDO...</span>
+            <span class="user-role">VIEWER</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid px-4">
+      <div id="error-banner" class="error-banner"></div>
+      <div class="filter-box shadow-sm small">
+        <div class="filter-row-custom">
+          <div class="filter-col-custom">
+            <label class="filter-label">SITE</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_location" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_location" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">SUPERVISOR</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_supervisor" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_supervisor" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">TURNO</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_turno" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_turno" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">TEAM LEADER</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_tl" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_tl" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">ÁREA SSFF</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_area" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_area" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">NOMBRE</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_nombre" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_nombre" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">ESTATUS ÁREA</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_inc_area" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_inc_area" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="filter-col-custom">
+            <label class="filter-label">ESTATUS POSICIÓN</label>
+            <div class="dropdown">
+              <button class="btn dropdown-check dropdown-toggle" type="button" id="btn_f_inc_pos" data-bs-toggle="dropdown" data-bs-auto-close="outside">Seleccionar</button>
+              <div class="dropdown-menu">
+                <input type="text" class="form-control search-filter" placeholder="Escribir..." onkeyup="filterMenuOptions(this)">
+                <div id="f_inc_pos" class="filter-options-container"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-0 align-items-stretch">
+        <div class="col-md-10">
+          <div class="row g-3">
+            <div class="col-4">
+              <div class="card-kpi shadow-sm">
+                <div class="kpi-title">TOTAL HC</div>
+                <div id="kpi_hc" class="kpi-val">0</div>
+                <div id="kpi_hc_pct" class="kpi-pct">0.0%</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card-kpi shadow-sm" style="border-top-color: #ffc107;">
+                <div class="kpi-title" style="color:#ffc107;">INC. ÁREA</div>
+                <div id="kpi_area" class="kpi-val" style="color:#ffc107;">0</div>
+                <div id="kpi_area_pct" class="kpi-pct">0.0%</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card-kpi shadow-sm" style="border-top-color: #f44336;">
+                <div class="kpi-title" style="color:#f44336;">INC. POSICIÓN</div>
+                <div id="kpi_pos" class="kpi-val" style="color:#f44336;">0</div>
+                <div id="kpi_pos_pct" class="kpi-pct">0.0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="action-column">
+            <button class="btn-refresh shadow-sm" id="btnRefresh" onclick="refreshData()">🔄 ACTUALIZAR</button>
+            <button class="btn-reset" onclick="resetFilters()">Limpiar Filtros</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-body">
+    <div class="section-header">
+      <h6 class="mb-0 fw-bold">📍 DETALLE POR ÁREA
+        <a href="javascript:void(0)" class="btn-help-trigger"
+           data-bs-toggle="popover"
+           data-bs-trigger="focus"
+           data-bs-html="true"
+           title="Ayuda: Detalle por Área"
+           data-bs-content="<ul class='mb-0'><li><b>Filtros:</b> Segmenta primero por Site y luego ajusta según el nivel de detalle deseado.</li><li><b>Estatus area:</b> Filtra 'Validar' para revisar diferencias entre SSFF y Groot.</li><li><b>Exportar:</b> Descarga un CSV con la vista filtrada.</li><li><b>Justificación:</b> Registra el motivo del ajuste completando el formulario correspondiente.</li></ul>">?</a>
+      </h6>
+      <button class="btn btn-meli btn-sm" onclick="exportData('AREA')">EXPORTAR CSV</button>
+    </div>
+    <div class="table-res mt-2">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>FECHA</th><th>LEGAJO</th><th>LDAP</th><th>NOMBRE</th><th>TURNO</th>
+            <th>TEAM LEADER</th><th>LOC</th><th>SSFF</th><th>GROOT</th><th>REAL</th>
+            <th>JUSTIFICACIÓN ÁREA</th><th>ESTADO</th>
+          </tr>
+        </thead>
+        <tbody id="table_area"></tbody>
+      </table>
+    </div>
+    <div id="page_area" class="pagination-controls"></div>
+
+    <div class="section-header mt-4">
+      <h6 class="mb-0 fw-bold">👔 DETALLE POR POSICIÓN
+        <a href="javascript:void(0)" class="btn-help-trigger"
+           data-bs-toggle="popover"
+           data-bs-trigger="focus"
+           data-bs-html="true"
+           title="Ayuda: Detalle por Posición"
+           data-bs-content="<ul class='mb-0'><li><b>Filtros:</b> Segmenta primero por Site y luego ajusta según el nivel de detalle deseado.</li><li><b>Estatus posicion:</b> Filtra 'Validar' para revisar diferencias entre SSFF y Groot.</li><li><b>Exportar:</b> Descarga un CSV con la vista filtrada.</li><li><b>Justificación:</b> Registra el motivo del ajuste completando el formulario correspondiente.</li></ul>">?</a>
+      </h6>
+      <button class="btn btn-meli btn-sm" onclick="exportData('POS')">EXPORTAR CSV</button>
+    </div>
+    <div class="table-res mt-2">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>FECHA</th><th>LEGAJO</th><th>LDAP</th><th>NOMBRE</th><th>TURNO</th>
+            <th>TEAM LEADER</th><th>LOC</th><th>SSFF</th><th>GROOT</th><th>REAL</th>
+            <th>JUSTIFICACIÓN POSICIÓN</th><th>ESTADO</th>
+          </tr>
+        </thead>
+        <tbody id="table_posicion"></tbody>
+      </table>
+    </div>
+    <div id="page_posicion" class="pagination-controls"></div>
+  </div>
+
+  <script>
+    let FULL_DATA = [], HEADERS = [], FILTERED_ROWS = [];
+    let PAGE_SIZE = 25, PAGE_AREA = 1, PAGE_POS = 1;
+
+    const FILTER_CONFIG = [
+      { id: 'f_location',   col: 'LOCATION' },
+      { id: 'f_supervisor', col: 'SUPERVISOR' },
+      { id: 'f_turno',      col: 'TURNO' },
+      { id: 'f_tl',         col: 'TEAM_LEADER' },
+      { id: 'f_area',       col: 'AREA_SSFF' },
+      { id: 'f_nombre',     col: 'NOMBRE_COMPLETO' },
+      { id: 'f_inc_pos',    col: 'INC_POSICION' },
+      { id: 'f_inc_area',   col: 'INC_AREA' }
+    ];
+
+    function showError(msg) {
+      const banner = document.getElementById('error-banner');
+      banner.textContent = '⚠️ ' + msg;
+      banner.style.display = 'block';
+    }
+
+    function hideLoader() {
+      document.getElementById('loader').style.display = 'none';
+    }
+
+    window.onload = () => {
+      fetch('/api/userinfo')
+        .then(r => r.json())
+        .then(u => {
+          if (!u) return;
+          document.getElementById('user-name').innerText = u.name;
+          document.getElementById('user-initials').innerText = u.initials;
+        })
+        .catch(err => console.error('userinfo error:', err));
+
+      loadInitialData();
+      initPopovers();
+    };
+
+    function initPopovers() {
+      document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => new bootstrap.Popover(el));
+    }
+
+    function loadInitialData() {
+      fetch('/api/data')
+        .then(r => r.json())
+        .then(res => {
+          if (!res || res.error) { showError(res ? res.error : 'Error al cargar datos'); hideLoader(); return; }
+          FULL_DATA = res.values;
+          HEADERS = res.headers;
+          syncDashboard();
+          hideLoader();
+        })
+        .catch(err => { showError('No se pudo conectar con el servidor: ' + err.message); hideLoader(); });
+    }
+
+    function refreshData() {
+      const btn = document.getElementById('btnRefresh');
+      btn.disabled = true;
+      btn.innerHTML = '🔄 CARGANDO...';
+      fetch('/api/data')
+        .then(r => r.json())
+        .then(res => {
+          if (!res || res.error) { showError(res ? res.error : 'Error al actualizar'); return; }
+          FULL_DATA = res.values;
+          HEADERS = res.headers;
+          syncDashboard();
+        })
+        .catch(err => showError('Error al actualizar: ' + err.message))
+        .finally(() => { btn.disabled = false; btn.innerHTML = '🔄 ACTUALIZAR'; });
+    }
+
+    function getIdx(name) { return HEADERS.indexOf(name); }
+
+    function filterMenuOptions(input) {
+      const filter = input.value.toLowerCase();
+      const container = input.nextElementSibling;
+      Array.from(container.getElementsByClassName('form-check')).forEach(opt => {
+        opt.style.display = opt.innerText.toLowerCase().includes(filter) ? '' : 'none';
+      });
+    }
+
+    function syncDashboard() {
+      const currentFilters = {};
+      FILTER_CONFIG.forEach(f => {
+        const checks = document.querySelectorAll(`#${f.id} input:checked`);
+        currentFilters[f.id] = Array.from(checks).map(c => c.value);
+        const btn = document.getElementById('btn_' + f.id);
+        btn.innerText = currentFilters[f.id].length > 0 ? `${currentFilters[f.id].length} Selecc.` : 'Seleccionar';
+      });
+
+      FILTERED_ROWS = FULL_DATA.filter(r =>
+        FILTER_CONFIG.every(f => {
+          const vals = currentFilters[f.id];
+          return vals.length === 0 || vals.includes(r[getIdx(f.col)]);
+        })
+      );
+
+      FILTER_CONFIG.forEach(f => {
+        const colIdx = getIdx(f.col);
+        const dataForFilter = FULL_DATA.filter(r =>
+          FILTER_CONFIG.every(otherF => {
+            if (otherF.id === f.id) return true;
+            const vals = currentFilters[otherF.id];
+            return vals.length === 0 || vals.includes(r[getIdx(otherF.col)]);
+          })
+        );
+        const availableOptions = [...new Set(dataForFilter.map(r => r[colIdx]))].filter(Boolean).sort();
+        updateSelectOptions(f.id, availableOptions, currentFilters[f.id]);
+      });
+
+      renderData();
+    }
+
+    function updateSelectOptions(id, options, selectedArray) {
+      const container = document.getElementById(id);
+      let html = '';
+      options.forEach((opt, i) => {
+        const isChecked = selectedArray.includes(opt) ? 'checked' : '';
+        const label = opt === 'INC' ? 'Validar' : opt === 'OK' ? 'Correcto' : opt;
+        html += `<div class="form-check">
+          <input class="form-check-input" type="checkbox" value="${opt}" id="chk_${id}_${i}" ${isChecked} onchange="syncDashboard()">
+          <label class="form-check-label" for="chk_${id}_${i}">${label}</label>
+        </div>`;
+      });
+      if (container.innerHTML !== html) container.innerHTML = html;
+    }
+
+    function renderData() {
+      const idxIncPos = getIdx('INC_POSICION'), idxIncArea = getIdx('INC_AREA');
+      const totalHC = new Set(FILTERED_ROWS.map(r => r[getIdx('LDAP')])).size || 0;
+      const totalIncArea = FILTERED_ROWS.filter(r => r[idxIncArea] === 'INC').length;
+      const totalIncPos = FILTERED_ROWS.filter(r => r[idxIncPos] === 'INC').length;
+
+      document.getElementById('kpi_hc').innerText = totalHC;
+      document.getElementById('kpi_area').innerText = totalIncArea;
+      document.getElementById('kpi_pos').innerText = totalIncPos;
+
+      const hcDivisor = totalHC || 1;
+      const accuracyTotal = Math.max(0, 100 - (((totalIncArea + totalIncPos) / hcDivisor) * 100));
+      document.getElementById('kpi_hc_pct').innerText = accuracyTotal.toFixed(1) + '%';
+      document.getElementById('kpi_area_pct').innerText = ((totalIncArea / hcDivisor) * 100).toFixed(1) + '%';
+      document.getElementById('kpi_pos_pct').innerText = ((totalIncPos / hcDivisor) * 100).toFixed(1) + '%';
+
+      const colsArea = ['FECHA_INGRESO','LEGAJO','LDAP','NOMBRE_COMPLETO','TURNO','TEAM_LEADER','LOCATION','AREA_SSFF','AREA_GROOT','AREA_REAL','JUSTIFICACACIÓN_ÁREA','INC_AREA'];
+      const colsPos  = ['FECHA_INGRESO','LEGAJO','LDAP','NOMBRE_COMPLETO','TURNO','TEAM_LEADER','LOCATION','POSICION_SSFF','POSICION_GROOT','POSICION_REAL','JUSTIFICACACIÓN_POSICION','INC_POSICION'];
+
+      paginate('table_area',     'page_area',     colsArea, PAGE_AREA, p => { PAGE_AREA = p; renderData(); });
+      paginate('table_posicion', 'page_posicion', colsPos,  PAGE_POS,  p => { PAGE_POS  = p; renderData(); });
+    }
+
+    function paginate(tableId, navId, cols, currentPage, setPage) {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const dataSlice = FILTERED_ROWS.slice(start, start + PAGE_SIZE);
+      const totalPages = Math.ceil(FILTERED_ROWS.length / PAGE_SIZE) || 1;
+
+      document.getElementById(tableId).innerHTML = dataSlice.map(row =>
+        `<tr>${cols.map(c => {
+          const val = row[getIdx(c)] || '';
+          if (c.startsWith('INC_')) {
+            return `<td><span class="${val === 'INC' ? 'badge-validar' : 'badge-correcto'}">${val === 'INC' ? 'Validar' : 'Correcto'}</span></td>`;
+          }
+          return `<td>${val}</td>`;
+        }).join('')}</tr>`
+      ).join('') || `<tr><td colspan="${cols.length}" class="text-center py-2">Sin datos</td></tr>`;
+
+      let navHtml = `<button class="btn btn-xs btn-outline-dark me-1" ${currentPage===1?'disabled':''} onclick="(${setPage})(1)">|«</button>`;
+      navHtml += `<button class="btn btn-xs btn-outline-dark me-2" ${currentPage===1?'disabled':''} onclick="(${setPage})(${currentPage-1})">Ant</button>`;
+      navHtml += `<span class="small fw-bold mx-2">Página ${currentPage} / ${totalPages}</span>`;
+      navHtml += `<button class="btn btn-xs btn-outline-dark ms-2" ${currentPage===totalPages?'disabled':''} onclick="(${setPage})(${currentPage+1})">Sig</button>`;
+      navHtml += `<button class="btn btn-xs btn-outline-dark ms-1" ${currentPage===totalPages?'disabled':''} onclick="(${setPage})(${totalPages})">»|</button>`;
+      document.getElementById(navId).innerHTML = totalPages > 1 ? navHtml : '';
+    }
+
+    function exportData(type) {
+      const cols = type === 'AREA'
+        ? ['FECHA_INGRESO','LEGAJO','LDAP','NOMBRE_COMPLETO','TURNO','TEAM_LEADER','LOCATION','AREA_SSFF','AREA_GROOT','AREA_REAL','JUSTIFICACACIÓN_ÁREA','INC_AREA']
+        : ['FECHA_INGRESO','LEGAJO','LDAP','NOMBRE_COMPLETO','TURNO','TEAM_LEADER','LOCATION','POSICION_SSFF','POSICION_GROOT','POSICION_REAL','JUSTIFICACACIÓN_POSICION','INC_POSICION'];
+
+      const exportRows = FILTERED_ROWS.map(r => cols.map(c => r[getIdx(c)] || ''));
+      const csvContent = [cols, ...exportRows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Reporte_ML_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function resetFilters() {
+      document.querySelectorAll('.search-filter').forEach(input => input.value = '');
+      document.querySelectorAll('.form-check-input').forEach(c => c.checked = false);
+      document.querySelectorAll('.form-check').forEach(opt => opt.style.display = '');
+      PAGE_AREA = 1; PAGE_POS = 1;
+      syncDashboard();
+    }
+  </script>
+</body>
+</html>
